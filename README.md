@@ -87,6 +87,7 @@ Essas credenciais são destinadas apenas ao ambiente inicial de desenvolvimento 
 ### Pré-requisitos
 
 - Python 3.12 ou superior
+- Docker
 - `pip`
 
 ### Linux e macOS
@@ -148,7 +149,6 @@ O volume mantém o banco SQLite no diretório `database/` do projeto.
 Com a aplicação em execução, acesse:
 
 - Swagger UI: <http://localhost:8000/docs>
-- ReDoc: <http://localhost:8000/redoc>
 
 ## 📌 Endpoints Principais
 
