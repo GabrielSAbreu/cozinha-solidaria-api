@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List
 
 from model import Session
 from model.curso import Curso
@@ -6,6 +7,30 @@ from routes.permissions import usuario_com_permissao_admin, usuario_root
 from schema.curso import CursoCreate, CursoResponse
 
 router = APIRouter(prefix="/cursos", tags=["Cursos"])
+
+
+@router.get("", response_model=List[CursoResponse])
+def listar_cursos():
+    session = Session()
+    try:
+        return session.query(Curso).all()
+    finally:
+        session.close()
+
+
+@router.get("/{id_curso}", response_model=CursoResponse)
+def buscar_curso(id_curso: int):
+    session = Session()
+    try:
+        curso = session.get(Curso, id_curso)
+        if curso is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Curso não encontrado.",
+            )
+        return curso
+    finally:
+        session.close()
 
 
 @router.post("", response_model=CursoResponse, status_code=status.HTTP_201_CREATED)

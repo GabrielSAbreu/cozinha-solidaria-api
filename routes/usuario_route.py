@@ -1,9 +1,34 @@
 from fastapi import APIRouter, Header, HTTPException, status
+from typing import List
 from model import Session
 from model.usuario import Usuario
 from schema import UsuarioCreate, UsuarioLogin, UsuarioResponse
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários"])
+
+
+@router.get("", response_model=List[UsuarioResponse])
+def listar_usuarios():
+    session = Session()
+    try:
+        return session.query(Usuario).all()
+    finally:
+        session.close()
+
+
+@router.get("/{id_usuario}", response_model=UsuarioResponse)
+def buscar_usuario(id_usuario: int):
+    session = Session()
+    try:
+        usuario = session.get(Usuario, id_usuario)
+        if usuario is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado.",
+            )
+        return usuario
+    finally:
+        session.close()
 
 
 def _criar_usuario(usuario_dados: UsuarioCreate):
