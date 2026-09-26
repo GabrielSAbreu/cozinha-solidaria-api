@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from model.base import Base
@@ -14,31 +14,7 @@ Session = sessionmaker(bind=db)
 Base.metadata.create_all(db)
 
 
-def _garantir_coluna_senha():
-    """Adiciona a coluna de senha em bancos SQLite já existentes."""
-    if "senha" not in {
-        column["name"] for column in inspect(db).get_columns("usuarios")
-    }:
-        with db.begin() as connection:
-            connection.execute(
-                text(
-                    "ALTER TABLE usuarios ADD COLUMN senha VARCHAR(255) NOT NULL DEFAULT ''"
-                )
-            )
-
-
-def _garantir_coluna_data_inicio():
-    """Adiciona a data de início em bancos SQLite já existentes."""
-    if "data_inicio" not in {
-        column["name"] for column in inspect(db).get_columns("cursos")
-    }:
-        with db.begin() as connection:
-            connection.execute(text("ALTER TABLE cursos ADD COLUMN data_inicio DATE"))
-
-
 def inicializar_usuario_root():
-    _garantir_coluna_senha()
-    _garantir_coluna_data_inicio()
     session = Session()
     try:
         root_existente = (
