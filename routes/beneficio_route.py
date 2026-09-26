@@ -1,12 +1,55 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from typing import List
 
 from model import Session
 from model.beneficio import Beneficio
+from model.recebe import Recebe
+from model.usuario import Usuario
 from routes.permissions import usuario_com_permissao_admin, usuario_root
-from schema.beneficio import BeneficioCreate, BeneficioResponse
+from schema.beneficio import (
+    BeneficioCreate,
+    BeneficioResponse,
+    BeneficioUsuarioResponse,
+)
 
 router = APIRouter(prefix="/beneficios", tags=["Benefícios"])
+
+
+@router.get("/usuario/{id_usuario}", response_model=List[BeneficioUsuarioResponse])
+def listar_beneficios_usuario(
+    id_usuario: int,
+    user_id: int | None = Header(default=None, alias="X-User-Id"),
+):
+    if user_id != id_usuario:
+        raise HTTPException(status_code=403, detail="Acesso não autorizado.")
+    session = Session()
+    try:
+        usuario = session.get(Usuario, id_usuario)
+        if usuario is None or usuario.tipo_usuario.lower() != "beneficiario":
+            raise HTTPException(
+                status_code=403,
+                detail="Apenas beneficiários podem consultar benefícios.",
+            )
+        recebimentos = {
+            recebimento.fk_beneficio_id_beneficio: recebimento.status
+            for recebimento in session.query(Recebe)
+            .filter(Recebe.fk_usuario_id_usuario == id_usuario)
+            .all()
+        }
+        return [
+            {
+                "id_beneficio": beneficio.id_beneficio,
+                "nome_beneficio": beneficio.nome_beneficio,
+                "descricao": beneficio.descricao,
+                "data_entrega": beneficio.data_entrega,
+                "status": recebimentos.get(beneficio.id_beneficio, "agendado"),
+            }
+            for beneficio in session.query(Beneficio)
+            .order_by(Beneficio.data_entrega)
+            .all()
+        ]
+    finally:
+        session.close()
 
 
 @router.get("", response_model=List[BeneficioResponse])

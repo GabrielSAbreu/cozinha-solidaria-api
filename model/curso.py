@@ -1,5 +1,5 @@
 from model.base import Base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Date
 from sqlalchemy.orm import relationship
 
 
@@ -9,9 +9,11 @@ class Curso(Base):
     id_curso = Column(Integer, primary_key=True, autoincrement=True)
     nome_curso = Column(String(100), nullable=False)
     carga_horaria = Column(Integer, nullable=False)
+    data_inicio = Column(Date, nullable=True)
 
     cursas = relationship("Cursa", back_populates="curso")
 
-    def __init__(self, nome_curso, carga_horaria):
+    def __init__(self, nome_curso, carga_horaria, data_inicio):
         self.nome_curso = nome_curso
         self.carga_horaria = carga_horaria
+        self.data_inicio = data_inicio

@@ -1,10 +1,56 @@
-from fastapi import APIRouter, Header, HTTPException, status
+from datetime import date, datetime
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from typing import List
 from model import Session
+from model.cursa import Cursa
 from model.usuario import Usuario
+from routes.permissions import usuario_com_permissao_admin
 from schema import UsuarioCreate, UsuarioLogin, UsuarioResponse
+from schema.usuario import AlunoCursoResponse
 
 router = APIRouter(prefix="/usuarios", tags=["Usuários"])
+
+
+def _idade(data_nascimento):
+    nascimento = datetime.strptime(str(data_nascimento)[:10], "%Y-%m-%d").date()
+    hoje = date.today()
+    return (
+        hoje.year
+        - nascimento.year
+        - ((hoje.month, hoje.day) < (nascimento.month, nascimento.day))
+    )
+
+
+@router.get("/alunos", response_model=List[AlunoCursoResponse])
+def listar_alunos(_usuario=Depends(usuario_com_permissao_admin)):
+    session = Session()
+    try:
+        alunos = (
+            session.query(Usuario)
+            .filter(Usuario.tipo_usuario.ilike("aluno"))
+            .order_by(Usuario.nome)
+            .all()
+        )
+        resultado = []
+        for aluno in alunos:
+            cursos = (
+                session.query(Cursa)
+                .filter(Cursa.fk_usuario_id_usuario == aluno.id_usuario)
+                .all()
+            )
+            nomes_cursos = [inscricao.curso.nome_curso for inscricao in cursos]
+            resultado.append(
+                AlunoCursoResponse(
+                    id_usuario=aluno.id_usuario,
+                    nome=aluno.nome,
+                    idade=_idade(aluno.data_nascimento),
+                    cidade=aluno.cidade,
+                    curso=", ".join(nomes_cursos) if nomes_cursos else "Não inscrito",
+                )
+            )
+        return resultado
+    finally:
+        session.close()
 
 
 @router.get("", response_model=List[UsuarioResponse])

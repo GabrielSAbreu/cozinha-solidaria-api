@@ -10,7 +10,7 @@ def verificar_permissao(
     session = Session()
     try:
         usuario = session.get(Usuario, user_id) if user_id is not None else None
-        if usuario is None or usuario.tipo_usuario not in papeis:
+        if usuario is None or usuario.tipo_usuario.lower() not in papeis:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=mensagem)
         return usuario
     finally:

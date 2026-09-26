@@ -27,8 +27,18 @@ def _garantir_coluna_senha():
             )
 
 
+def _garantir_coluna_data_inicio():
+    """Adiciona a data de início em bancos SQLite já existentes."""
+    if "data_inicio" not in {
+        column["name"] for column in inspect(db).get_columns("cursos")
+    }:
+        with db.begin() as connection:
+            connection.execute(text("ALTER TABLE cursos ADD COLUMN data_inicio DATE"))
+
+
 def inicializar_usuario_root():
     _garantir_coluna_senha()
+    _garantir_coluna_data_inicio()
     session = Session()
     try:
         root_existente = (

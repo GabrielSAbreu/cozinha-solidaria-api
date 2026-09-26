@@ -14,3 +14,11 @@ class BeneficioResponse(BeneficioCreate):
 
     class Config:
         from_attributes = True
+
+
+class BeneficioUsuarioResponse(BaseModel):
+    id_beneficio: int
+    nome_beneficio: str
+    descricao: str
+    data_entrega: date
+    status: str

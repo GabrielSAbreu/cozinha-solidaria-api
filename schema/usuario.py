@@ -53,6 +53,14 @@ class UsuarioResponse(BaseModel):
         from_attributes = True
 
 
+class AlunoCursoResponse(BaseModel):
+    id_usuario: int
+    nome: str
+    idade: int
+    cidade: str
+    curso: str
+
+
 class UsuarioLogin(BaseModel):
     email: EmailStr
     senha: str
